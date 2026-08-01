@@ -3,11 +3,13 @@
 ```markdown
 # ps2re
 
+Primeiramente e um re-branch do sistema para funcionar em arm64 (utilizei o xiaomi studioo) então podem haver inumeros bugs e falhas presentes. o foco e para EMU então por favor quaisquer desenvolvedor que queira ajudar, compartilhar a construir eu ficarei imensamente grato pois entendo que o hardware do ps2 foi e continua sendo super-estimado para baixo.
+
 **PS2 → ARM64 Re-architecture: Zero-waste async pipeline reimplementation**
 
 > Extrair 100% da potência do hardware PS2 — EE, VU0, VU1, GS — remapeado
 > para ARM64 com task graph assíncrono, Vulkan TBDR, e NEON compute.
-> Sem desperdício energético, sem stalls de pipeline, sem overhead de DMA.
+> sem stalls de pipeline, sem overhead de DMA.
 
 ---
 
