@@ -1,0 +1,60 @@
+#version 450
+layout(local_size_x = 64) in;
+
+/* Tile-based culling — replaces PS2's lack of hardware culling.
+ * Runs before rendering: marks which draw calls are visible in which tile.
+ * Inspired by BotW's compute-shader culling on Wii U/Switch. */
+
+struct DrawCommand {
+    uint index_count;
+    uint instance_count;
+    uint first_index;
+    int  vertex_offset;
+    uint first_instance;
+};
+
+struct BoundingBox {
+    vec4 min_pos;  /* xyz = min, w = draw_index */
+    vec4 max_pos;  /* xyz = max, w = unused */
+};
+
+layout(set = 0, binding = 0) readonly buffer DrawCommands {
+    DrawCommand draws[];
+};
+
+layout(set = 0, binding = 1) readonly buffer BoundingBoxes {
+    BoundingBox boxes[];
+};
+
+layout(set = 0, binding = 2) writeonly buffer Visibility {
+    uint visible_flags[];  /* 1 = visible, 0 = culled */
+};
+
+layout(push_constant) uniform Params {
+    mat4 view_proj;
+    vec4 frustum_planes[6];  /* ax + by + cz + d = 0 */
+    uint draw_count;
+};
+
+bool test_aabb_plane(vec4 plane, vec3 bmin, vec3 bmax) {
+    vec3 p = mix(bmin, bmax, greaterThan(plane.xyz, vec3(0.0)));
+    return dot(plane.xyz, p) + plane.w >= 0.0;
+}
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= draw_count) return;
+
+    vec3 bmin = boxes[idx].min_pos.xyz;
+    vec3 bmax = boxes[idx].max_pos.xyz;
+
+    bool visible = true;
+    for (int i = 0; i < 6; i++) {
+        if (!test_aabb_plane(frustum_planes[i], bmin, bmax)) {
+            visible = false;
+            break;
+        }
+    }
+
+    visible_flags[idx] = visible ? 1u : 0u;
+}

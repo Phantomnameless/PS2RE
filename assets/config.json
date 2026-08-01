@@ -1,0 +1,32 @@
+{
+  "display": {
+    "width": 1920,
+    "height": 1080,
+    "fullscreen": false,
+    "vsync": true,
+    "target_fps": 60
+  },
+  "rendering": {
+    "max_frames_in_flight": 3,
+    "depth_prepass": true,
+    "texture_filtering": "bilinear",
+    "anisotropy": 4,
+    "msaa": 1
+  },
+  "async": {
+    "worker_threads": 4,
+    "task_graph_capacity": 4096,
+    "frame_arena_size_mb": 16
+  },
+  "audio": {
+    "sample_rate": 48000,
+    "buffer_size": 1024,
+    "voices": 48
+  },
+  "ps2": {
+    "ee_clock_mhz": 294,
+    "vu_clock_mhz": 294,
+    "gs_clock_mhz": 147,
+    "pal_mode": false
+  }
+}

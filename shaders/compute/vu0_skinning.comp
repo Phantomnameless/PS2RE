@@ -1,0 +1,56 @@
+#version 450
+layout(local_size_x = 64) in;
+
+/* GPU compute skinning — replaces VU0 COP2 bone blending.
+ * Runs on async compute while graphics queue renders previous frame. */
+
+struct Vertex {
+    vec4 pos;
+    vec3 normal;
+    vec2 uv;
+    uint packed_color;
+};
+
+layout(set = 0, binding = 0) readonly buffer RestPose {
+    Vertex rest_vertices[];
+};
+
+layout(set = 0, binding = 1) readonly buffer BoneIndices {
+    uvec4 bone_idx[];     /* 4 bones per vertex */
+};
+
+layout(set = 0, binding = 2) readonly buffer BoneWeights {
+    vec4 bone_wt[];       /* 4 weights per vertex */
+};
+
+layout(set = 0, binding = 3) readonly buffer BoneMatrices {
+    mat4 bones[];          /* MAX_BONES matrices */
+};
+
+layout(set = 0, binding = 4) writeonly buffer OutputVertices {
+    Vertex out_vertices[];
+};
+
+layout(push_constant) uniform Params {
+    uint vertex_count;
+};
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= vertex_count) return;
+
+    Vertex v = rest_vertices[idx];
+    uvec4 bi = bone_idx[idx];
+    vec4  bw = bone_wt[idx];
+
+    /* Blend bone matrices */
+    mat4 skin = bw.x * bones[bi.x]
+              + bw.y * bones[bi.y]
+              + bw.z * bones[bi.z]
+              + bw.w * bones[bi.w];
+
+    v.pos = skin * v.pos;
+    v.normal = mat3(skin) * v.normal;
+
+    out_vertices[idx] = v;
+}

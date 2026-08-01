@@ -1,0 +1,32 @@
+#version 450
+layout(local_size_x = 256) in;
+
+struct Particle {
+    vec4 pos_life;    /* xyz = pos, w = remaining life */
+    vec4 vel_size;    /* xyz = velocity, w = size */
+};
+
+layout(set = 0, binding = 0) buffer Particles {
+    Particle particles[];
+};
+
+layout(push_constant) uniform Params {
+    float gravity;
+    float dt;
+    uint  count;
+};
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= count) return;
+
+    Particle p = particles[idx];
+
+    if (p.pos_life.w <= 0.0) return;  /* dead */
+
+    p.vel_size.y += gravity * dt;
+    p.pos_life.xyz += p.vel_size.xyz * dt;
+    p.pos_life.w -= dt;
+
+    particles[idx] = p;
+}

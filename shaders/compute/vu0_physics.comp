@@ -1,0 +1,38 @@
+#version 450
+layout(local_size_x = 256) in;
+
+/* GPU compute physics — alternative to CPU NEON for large counts.
+ * Uses async compute queue on ARM64 (separate from graphics). */
+
+struct Body {
+    vec4 pos;       /* xyz = position, w = inv_mass */
+    vec4 vel;       /* xyz = velocity, w = flags */
+};
+
+layout(set = 0, binding = 0) buffer BodiesBuffer {
+    Body bodies[];
+};
+
+layout(push_constant) uniform Params {
+    float gravity_y;
+    float dt;
+    float damping;
+    uint  count;
+};
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= count) return;
+
+    Body b = bodies[idx];
+    float inv_mass = b.pos.w;
+
+    if (inv_mass <= 0.0) return;  /* static body */
+
+    b.vel.y += gravity_y * dt;
+    b.vel.xyz *= damping;
+
+    b.pos.xyz += b.vel.xyz * dt;
+
+    bodies[idx] = b;
+}
