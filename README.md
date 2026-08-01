@@ -3,7 +3,10 @@
 ```markdown
 # ps2re
 
-Primeiramente e um re-branch do sistema para funcionar em arm64 (utilizei o xiaomi studioo) então podem haver inumeros bugs e falhas presentes. o foco e para EMU então por favor quaisquer desenvolvedor que queira ajudar, compartilhar a construir eu ficarei imensamente grato pois entendo que o hardware do ps2 foi e continua sendo super-estimado para baixo.
+Primeiramente e um re-branch do sistema para funcionar em arm64 (utilizei o xiaomi studioo) então podem haver
+inumeros bugs e falhas presentes. o foco e para EMU então por favor quaisquer desenvolvedor que queira ajudar,
+compartilhar a construir eu ficarei imensamente grato
+pois entendo que o hardware do ps2 foi e continua sendo super-estimado para baixo.
 
 **PS2 → ARM64 Re-architecture: Zero-waste async pipeline reimplementation**
 
