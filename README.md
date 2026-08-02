@@ -97,40 +97,40 @@ A ideia: se você tivesse o PS2, mas com:
 ## Arquitetura
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         FRAME N+1 (CPU)                             │
-│                                                                     │
-│  arena_reset() → task_graph_reset() → build_frame_task_graph()     │
-│                                                                     │
-│  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────────┐    │
-│  │ t_logic  │──→│ t_physics│──→│ t_vu1    │──→│ t_build_draw │    │
-│  │ (EE)     │   │ (NEON)   │   │ (NEON)   │   │ (CPU→GPU)    │    │
-│  └──────────┘   └──────────┘   └──────────┘   └──────────────┘    │
-│       │              │                                               │
-│       ├──→ t_particles (NEON) ──────────────→ t_build_draw         │
-│       ├──→ t_skinning (NEON)  ──────────────→ t_build_draw         │
-│       └──→ t_audio (NEON, LITTLE core)                             │
-│                                                                     │
-│  Work-stealing scheduler distribui tasks entre 4+ cores ARM64      │
-│  Arena allocator: zero malloc no hot path, reset em 1 instrução    │
-│  Ring buffers lock-free: SPSC para audio, MPSC para upload         │
-├─────────────────────────────────────────────────────────────────────┤
-│                         FRAME N (GPU)                               │
-│                                                                     │
-│  Vulkan command buffer (pré-gravado):                              │
-│    1. Depth pre-pass (TBDR: preenche HiZ, zero overdraw depois)    │
-│    2. Shadow map (render pass separado, transient attachment)       │
-│    3. Main opaque (TBDR: hidden surface removal em tile memory)    │
-│    4. Transparent (sorted per-tile)                                │
-│    5. Post-process (compute shader)                                │
-│    6. UI overlay                                                    │
-│                                                                     │
-│  CPU e GPU nunca se esperam (exceto no turnover de frame slot)     │
-├─────────────────────────────────────────────────────────────────────┤
-│                     FRAME N-1 (Display)                             │
-│                                                                     │
-│  Swapchain image apresentada na tela                               │
-└─────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                         FRAME N+1 (CPU)                         │
+│                                                                 │
+│  arena_reset() → task_graph_reset() → build_frame_task_graph()  │
+│                                                                 │
+│  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────────┐  │
+│  │ t_logic  │──→│ t_physics│──→│ t_vu1    │──→│ t_build_draw │  │
+│  │ (EE)     │   │ (NEON)   │   │ (NEON)   │   │ (CPU→GPU)    │  │
+│  └──────────┘   └──────────┘   └──────────┘   └──────────────┘  │
+│       │              │                                          │
+│       ├──→ t_particles (NEON) ──────────────→ t_build_draw      │
+│       ├──→ t_skinning (NEON)  ──────────────→ t_build_draw      │
+│       └──→ t_audio (NEON, LITTLE core)                          │
+│                                                                 │
+│  Work-stealing scheduler distribui tasks entre 4+ cores ARM64   │
+│  Arena allocator: zero malloc no hot path, reset em 1 instrução │
+│  Ring buffers lock-free: SPSC para audio, MPSC para upload      │
+├─────────────────────────────────────────────────────────────────┤
+│                         FRAME N (GPU)                           │
+│                                                                 │
+│  Vulkan command buffer (pré-gravado):                           │
+│    1. Depth pre-pass (TBDR: preenche HiZ, zero overdraw depois) │
+│    2. Shadow map (render pass separado, transient attachment)   │
+│    3. Main opaque (TBDR: hidden surface removal em tile memory) │
+│    4. Transparent (sorted per-tile)                             │
+│    5. Post-process (compute shader)                             │
+│    6. UI overlay                                                │
+│                                                                 │
+│  CPU e GPU nunca se esperam (exceto no turnover de frame slot)  │
+├─────────────────────────────────────────────────────────────────┤
+│                     FRAME N-1 (Display)                         │
+│                                                                 │
+│  Swapchain image apresentada na tela                            │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 **Triple buffering de frame slots:**
@@ -197,9 +197,9 @@ GIF tag → 12-20 cyc overhead   Vulkan draw call → ~0 overhead
 PATH3 stall on GS busy         Async command buffer → zero stalls
 ```
 
-VU1 fazia: transformação MVP, clipping, viewport transform.
+VU1 faz: transformação MVP, clipping, viewport transform.
 Em ARM64: batch NEON com SoA layout (4 verts por operação) para CPU-side,
-ou vertex shader na GPU para alta geometria.
+ou vertex shader na GPU para geometria complexa.
 
 ### GS → Vulkan TBDR
 
@@ -1377,16 +1377,5 @@ criativa. O PS2 é a prova disso — e ARM64 é o próximo capítulo.
 
 "Não é sobre o hardware que você tem. É sobre como você o usa."
 ```
-
----
-
-O README está completo. Ele serve como:
-
-1. **Onboarding** para qualquer senior que entre no projeto
-2. **Roadmap** com prioridades claras (P0-P3) e esforço estimado
-3. **Referência técnica** com decisões de arquitetura justificadas
-4. **Manual de build** para todas as plataformas
-5. **Guia de debugging** com ferramentas específicas
-6. **Checklist de contribuição** para manter qualidade
 7. **Benchmarks** com valores esperados e como medir
 8. **Sprint planning** com critérios de sucesso concretos
